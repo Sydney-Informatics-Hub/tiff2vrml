@@ -1,18 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[6]:
-
-
 import numpy as np
 import tifffile as tiff
 import os
-import scipy
 import matplotlib.pyplot as plt
-
-
-# In[8]:
-
 
 # Read the tiff files, assume have sorteable filenames 001.tif, 002.tif etc.
 tiff_dir = "data/"
@@ -34,8 +26,6 @@ for i, tiff_file in enumerate(tiff_files):
   volume[:, :, i] = tiff_data
 
 
-# In[9]:
-
 
 for i in range(volume.shape[2]):
     slice_2d = volume[:, :, i]
@@ -44,8 +34,6 @@ for i in range(volume.shape[2]):
     plt.colorbar()
     plt.show()
 
-
-# In[ ]:
 
 
 
