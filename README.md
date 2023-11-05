@@ -1,34 +1,37 @@
-# Imod Container
 
-Docker image to run [imod](https://bio3d.colorado.edu/imod/)
+# Helper code
 
-There may be some graphics drivers that are required on the host machine to run this correctly.
-
-If you have used this work for a publication, you must acknowledge SIH, e.g: "The authors acknowledge the technical assistance provided by the Sydney Informatics Hub, a Core Research Facility of the University of Sydney."
-
-
-# How to recreate
-
-## Build with docker
-Check out this repo then build the Docker file.
 ```
-sudo docker build . -t sydneyinformaticshub/imod:11.4-centos7
+import numpy as np
+import tifffile as tiff
+import os
+import scipy
+import matplotlib.pyplot as plt
+
+# Read the tiff files, assume have sorteable filenames 001.tif, 002.tif etc.
+tiff_dir = "data/"
+tiff_files = [f for f in os.listdir(tiff_dir) if f.endswith(".tif")]
+tiff_files.sort()
+
+# Load the first TIFF file to get its dimensions
+first_tiff = tiff_files[0]
+height, width = first_tiff.shape
+num_slices = len(tiff_files)
+
+# Create a numpy array to store the volume
+volume = np.zeros((height, width, num_slices), dtype=np.uint8)
+
+# Iterate through TIFF files and populate a volume
+for i, tiff_file in enumerate(tiff_files):
+  print(tiff_file)
+  tiff_data = tiff.imread(os.path.join(tiff_dir, tiff_file))
+  volume[:, :, i] = tiff_data
 ```
 
-## Run with docker.
-To run this, mounting your current host directory in the container directory, at /project, and interactively launch imod run these steps:
-```
-xhost +
-sudo docker run --gpus all -it --rm -v `pwd`:/project -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY sydneyinformaticshub/imod:11.4-centos7
-imod
-```
+# Try
+* Open3d
+* vtk
+* ?? others
 
-## Push to docker hub
-```
-sudo docker push sydneyinformaticshub/imod:11.4-centos7
-```
-
-See the repo at [https://hub.docker.com/r/nbutter/imod](https://hub.docker.com/r/nbutter/imod)
-
-
-
+# Now do magic
+Export vrml
