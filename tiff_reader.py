@@ -1,6 +1,16 @@
 #!/usr/bin/env python
 # coding: utf-8
-
+"""
+ __                 
+/  \        _______________________
+|  |       /                        \
+@  @       | It looks like you      |
+|| ||      | are you writing        |
+|| ||   <--| Python code to process |
+|\_/|      | a series of TIFFs and  |
+|   |      | create a 3d volume     |
+\___/      \________________________/
+"""
 # In[6]:
 
 
