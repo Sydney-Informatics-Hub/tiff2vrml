@@ -1,4 +1,19 @@
-# sconverting array to point cloud and saving as mesh
+"""
+ Converting tif image array stack to point cloud and saving as mesh
+ Supports multiple mesh export formats incl VRML, OBJ, STL, PLY, VTK
+
+    Usage:
+    python tiff2mesh.py --directory data --filename_pattern {}.tif --filename_out cellmesh_test.wrl --file_format vrml --grid_spacing 1 1 1
+
+    Arguments:
+    --directory: directory where tif images are located
+    --filename_pattern: filename pattern for tif images
+    --filename_out: filename for output mesh
+    --file_format: file format for output mesh
+    --grid_spacing: grid spacing for output mesh
+    
+"""
+
 
 import numpy as np
 import pyvista as pv
@@ -38,6 +53,7 @@ def save_mesh(mesh, filename, file_format = 'obj'):
 
     :param mesh: A PyVista mesh object.
     :param filename: The output file path.
+    :param file_format: The file format to save as (e.g., "stl", "ply", "obj", "vrml").
     """
 
     if file_format.lower() == 'vrml':
@@ -86,19 +102,6 @@ def numpy_stack_to_mesh(array_stack, filename, threshold = 0.9, file_format="obj
 
     # Save the mesh to a file
     save_mesh(contours, filename, file_format)
-    # cells = [("triangle", contours.faces.reshape(-1, 4)[:, 1:])]
-    # meshio.write_points_cells(
-    #     filename,
-    #     contours.points,
-    #     cells,
-    #     file_format=file_format
-    # )
-
-
-def main(array_stack, filename, file_format="obj"):
-    points = arrays_to_point_cloud(array_stack)
-    surface = point_cloud_to_mesh(points)
-    save_mesh(surface, filename, file_format)
 
 
 
@@ -181,3 +184,12 @@ def test_main():
     main(directory, filename_pattern, filename_out, file_format=file_format, grid_spacing = grid_spacing)
 
 
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Convert tif images to mesh')
+    parser.add_argument('--directory', type=str, default='data', help='directory where tif images are located')
+    parser.add_argument('--filename_pattern', type=str, default='{}.tif', help='filename pattern for tif images')
+    parser.add_argument('--filename_out', type=str, default='cellmesh_test.wrl', help='filename for output mesh')
+    parser.add_argument('--file_format', type=str, default='vrml', help='file format for output mesh')
+    parser.add_argument('--grid_spacing', type=float, nargs=3, default=[1,1,1], help='grid spacing for output mesh')
+    args = parser.parse_args()
+    main(args.directory, args.filename_pattern, args.filename_out, file_format=args.file_format, grid_spacing = args.grid_spacing)
