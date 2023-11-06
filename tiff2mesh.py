@@ -106,9 +106,10 @@ def test_tif_images_to_numpy_array_stack():
     array_stack = tif_images_to_numpy_array_stack(directory, filename_pattern, image_count)
 
 
-def main(array_stack, filename, file_format="vrml"):
+def main(array_stack, filename, file_format="obj"):
+    #array_stack = tif_images_to_numpy_array_stack(directory, filename_pattern, image_count)
     points = arrays_to_point_cloud(array_stack)
-    surface = point_cloud_to_mesh(points)
+    surface = point_cloud_to_mesh(points)   
     save_mesh(surface, filename, file_format)
 
 # write main execution with argparse
