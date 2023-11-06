@@ -4,6 +4,8 @@ import numpy as np
 import pyvista as pv
 import meshio
 import argparse
+import os
+from PIL import Image
 
 def arrays_to_point_cloud(arrays, spacing = [1,1,1]):
     """
@@ -49,23 +51,7 @@ def main(array_stack, filename, file_format="obj"):
     surface = point_cloud_to_mesh(points)
     save_mesh(surface, filename, file_format)
 
-# Test function to create synthetic data and test the pipeline
-def test_conversion():
-    # Create synthetic data: a stack of 3 10x10 arrays with a simple shape
-    arrays = np.zeros((10, 10, 3), dtype=np.uint8)
-    arrays[3:7, 3:7, :] = 1  # Create a cube in the center
 
-    # Convert arrays to point cloud
-    points = arrays_to_point_cloud(arrays)
-    
-    # Convert point cloud to mesh
-    surface = point_cloud_to_mesh(points)
-    
-    # Save mesh as VRML
-    vrml_filename = 'synthetic_data_mesh.obj'
-    save_mesh(surface, vrml_filename, file_format='obj')
-
-    return vrml_filename
 
 def tif_images_to_numpy_array_stack(directory, filename_pattern, image_count):
     """
@@ -95,6 +81,31 @@ def tif_images_to_numpy_array_stack(directory, filename_pattern, image_count):
     return np.stack(images, axis=-1)
 
 
+# Test function to create synthetic data and test the pipeline
+def test_conversion():
+    # Create synthetic data: a stack of 3 10x10 arrays with a simple shape
+    arrays = np.zeros((10, 10, 3), dtype=np.uint8)
+    arrays[3:7, 3:7, :] = 1  # Create a cube in the center
+
+    # Convert arrays to point cloud
+    points = arrays_to_point_cloud(arrays)
+    
+    # Convert point cloud to mesh
+    surface = point_cloud_to_mesh(points)
+    
+    # Save mesh as VRML
+    vrml_filename = 'synthetic_data_mesh.obj'
+    save_mesh(surface, vrml_filename, file_format='obj')
+
+    return vrml_filename
+
+def test_tif_images_to_numpy_array_stack():
+    directory = 'data'
+    filename_pattern = '{}.tif'
+    image_count = 5
+    array_stack = tif_images_to_numpy_array_stack(directory, filename_pattern, image_count)
+
+
 def main(array_stack, filename, file_format="vrml"):
     points = arrays_to_point_cloud(array_stack)
     surface = point_cloud_to_mesh(points)
@@ -110,5 +121,5 @@ if __name__ == "__main__":
     main(args.array_stack, args.filename, args.file_format)
 
 
-directory = 'data
-filename_pattern = 'image{}.tif'
+#directory = 'data'
+#filename_pattern = '{}.tif'
