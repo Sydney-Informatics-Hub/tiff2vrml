@@ -11,7 +11,7 @@
     --filename_out: filename for output mesh
     --file_format: file format for output mesh
     --grid_spacing: grid spacing for output mesh
-    
+
 """
 
 
@@ -118,9 +118,10 @@ def tif_images_to_numpy_array_stack(directory, filename_pattern, image_count=Non
     images = []
 
     if image_count is None:
-        # list all files with the given pattern in directory
-        filename_list = [f for f in os.listdir(directory) if filename_pattern.format(0) in f]
+        # list all  files with the given pattern in directory for any integer
+        filename_list = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f)) and f.endswith('.tif')]
         image_count = len(filename_list)
+        print('Processing {} images'.format(image_count))
 
     # Loop over the image numbers and load each image
     for i in range(image_count):
@@ -180,7 +181,8 @@ def test_main():
     #filename_out = 'cellmesh_test.obj'
     filename_out = 'cellmesh_test.wrl'
     file_format="vrml"
-    grid_spacing = (1, 1, 1)
+    #file_format = 'obj'
+    grid_spacing = (1., 1., 1.)
     main(directory, filename_pattern, filename_out, file_format=file_format, grid_spacing = grid_spacing)
 
 
