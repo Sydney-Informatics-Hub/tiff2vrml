@@ -10,6 +10,8 @@
 |\_/|      | a series of TIFFs and  |
 |   |      | create a 3d volume     |
 \___/      \________________________/
+
+Committed by Clippy
 """
 # In[6]:
 
