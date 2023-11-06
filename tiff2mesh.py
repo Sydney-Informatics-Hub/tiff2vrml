@@ -5,7 +5,6 @@ import pyvista as pv
 import meshio
 import argparse
 import os
-from skimage import measure
 from PIL import Image
 
 def arrays_to_point_cloud(arrays, spacing = [1,1,1]):
@@ -47,14 +46,15 @@ def save_mesh(mesh, filename, file_format = 'obj'):
         file_format=file_format
     )
 
-def numpy_stack_to_mesh(array_stack, threshold = 0.9, filename, file_format="stl", grid_spacing = (1, 1, 1)):
+def numpy_stack_to_mesh(array_stack, filename, threshold = 0.9, file_format="obj", grid_spacing = (1, 1, 1)):
     """
     Convert a 3D NumPy array stack to a mesh using PyVista's marching cubes algorithm.
 
     :param array_stack: A 3D numpy array stack.
-    :param threshold: The threshold level to apply the marching cubes algorithm.
     :param filename: The filename to save the mesh.
+    :param threshold: The threshold level to apply the marching cubes algorithm.
     :param file_format: Format to save the mesh in (e.g., "stl", "ply", "obj", "vtk").
+    :param grid_spacing: The grid spacing in each dimension. Defaults to (1, 1, 1).
     """
     # Create a PyVista grid from the NumPy array stack
     grid = pv.UniformGrid()
@@ -71,15 +71,14 @@ def numpy_stack_to_mesh(array_stack, threshold = 0.9, filename, file_format="stl
     contours = grid.contour([threshold])
 
     # Save the mesh to a file
-
-    # meshio is used for VRML as PyVista does not support VRML natively
-    cells = [("triangle", contours.faces.reshape(-1, 4)[:, 1:])]
-    meshio.write_points_cells(
-        filename,
-        contours.points,
-        cells,
-        file_format=file_format
-    )
+    save_mesh(contours, filename, file_format)
+    # cells = [("triangle", contours.faces.reshape(-1, 4)[:, 1:])]
+    # meshio.write_points_cells(
+    #     filename,
+    #     contours.points,
+    #     cells,
+    #     file_format=file_format
+    # )
 
 
 def main(array_stack, filename, file_format="obj"):
@@ -89,7 +88,7 @@ def main(array_stack, filename, file_format="obj"):
 
 
 
-def tif_images_to_numpy_array_stack(directory, filename_pattern, image_count):
+def tif_images_to_numpy_array_stack(directory, filename_pattern, image_count=None):
     """
     Convert a stack of TIF images into a NumPy array stack.
 
@@ -100,6 +99,11 @@ def tif_images_to_numpy_array_stack(directory, filename_pattern, image_count):
     """
     # Initialize a list to hold the image data
     images = []
+
+    if image_count is None:
+        # list all files with the given pattern in directory
+        filename_list = [f for f in os.listdir(directory) if filename_pattern.format(0) in f]
+        image_count = len(filename_list)
 
     # Loop over the image numbers and load each image
     for i in range(image_count):
@@ -117,6 +121,16 @@ def tif_images_to_numpy_array_stack(directory, filename_pattern, image_count):
     return np.stack(images, axis=-1)
 
 
+def main(directory, filename_pattern, filename_out, file_format="obj", grid_spacing = (1, 1, 1)):
+    array_stack = tif_images_to_numpy_array_stack(directory, filename_pattern)
+    #points = arrays_to_point_cloud(array_stack)
+    #surface = point_cloud_to_mesh(points)   
+    #save_mesh(surface, filename, file_format)
+    numpy_stack_to_mesh(array_stack, filename_out, threshold = 0.9, file_format=file_format, grid_spacing=grid_spacing)
+
+
+### test function
+
 # Test function to create synthetic data and test the pipeline
 def test_conversion():
     # Create synthetic data: a stack of 3 10x10 arrays with a simple shape
@@ -130,10 +144,10 @@ def test_conversion():
     surface = point_cloud_to_mesh(points)
     
     # Save mesh as VRML
-    vrml_filename = 'synthetic_data_mesh.obj'
-    save_mesh(surface, vrml_filename, file_format='obj')
+    mesh_filename = 'synthetic_data_mesh.obj'
+    save_mesh(surface, mesh_filename, file_format='obj')
 
-    return vrml_filename
+    return mesh_filename
 
 def test_tif_images_to_numpy_array_stack():
     directory = 'data'
@@ -142,11 +156,12 @@ def test_tif_images_to_numpy_array_stack():
     array_stack = tif_images_to_numpy_array_stack(directory, filename_pattern, image_count)
 
 
-def main(directory, filename_pattern, filename_out, file_format="obj", grid_spacing = (1, 1, 1)):
-    array_stack = tif_images_to_numpy_array_stack(directory, filename_pattern)
-    #points = arrays_to_point_cloud(array_stack)
-    #surface = point_cloud_to_mesh(points)   
-    #save_mesh(surface, filename, file_format)
-    numpy_stack_to_mesh(array_stack, threshold = 0.9, filename_out, file_format=file_format, grid_spacing = (grid_spacing))
+
+def test_main():
+    directory = 'data'
+    filename_pattern = '{}.tif'
+    filename_out = 'cellmesh_test.obj'
+    grid_spacing = (1, 1, 1)
+    main(directory, filename_pattern, filename_out, file_format="obj", grid_spacing = grid_spacing)
 
 
