@@ -6,6 +6,7 @@ import meshio
 import argparse
 import os
 from PIL import Image
+import vtk
 
 def arrays_to_point_cloud(arrays, spacing = [1,1,1]):
     """
@@ -38,13 +39,26 @@ def save_mesh(mesh, filename, file_format = 'obj'):
     :param mesh: A PyVista mesh object.
     :param filename: The output file path.
     """
-    cells = [("triangle", mesh.faces.reshape(-1, 4)[:, 1:])]
-    meshio.write_points_cells(
-        filename,
-        mesh.points,
-        cells,
-        file_format=file_format
-    )
+
+    if file_format.lower() == 'vrml':
+        plotter = pv.Plotter(off_screen=True)
+        plotter.add_mesh(mesh)
+        plotter.show(auto_close=False) 
+        vrml_exporter = vtk.vtkVRMLExporter()
+        vrml_exporter.SetFileName(filename)
+        vrml_exporter.SetRenderWindow(plotter.ren_win)
+        vrml_exporter.Write()
+        #vrml_exporter.SetInputData(mesh)
+        #vrml_exporter.Write()
+        plotter.close()
+    else:
+        cells = [("triangle", mesh.faces.reshape(-1, 4)[:, 1:])]
+        meshio.write_points_cells(
+            filename,
+            mesh.points,
+            cells,
+            file_format=file_format
+        )
 
 def numpy_stack_to_mesh(array_stack, filename, threshold = 0.9, file_format="obj", grid_spacing = (1, 1, 1)):
     """
@@ -160,8 +174,10 @@ def test_tif_images_to_numpy_array_stack():
 def test_main():
     directory = 'data'
     filename_pattern = '{}.tif'
-    filename_out = 'cellmesh_test.obj'
+    #filename_out = 'cellmesh_test.obj'
+    filename_out = 'cellmesh_test.wrl'
+    file_format="vrml"
     grid_spacing = (1, 1, 1)
-    main(directory, filename_pattern, filename_out, file_format="obj", grid_spacing = grid_spacing)
+    main(directory, filename_pattern, filename_out, file_format=file_format, grid_spacing = grid_spacing)
 
 
