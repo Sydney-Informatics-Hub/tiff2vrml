@@ -5,6 +5,7 @@ import pyvista as pv
 import meshio
 import argparse
 import os
+from skimage import measure
 from PIL import Image
 
 def arrays_to_point_cloud(arrays, spacing = [1,1,1]):
@@ -45,6 +46,41 @@ def save_mesh(mesh, filename, file_format = 'obj'):
         cells,
         file_format=file_format
     )
+
+def numpy_stack_to_mesh(array_stack, threshold = 0.9, filename, file_format="stl", grid_spacing = (1, 1, 1)):
+    """
+    Convert a 3D NumPy array stack to a mesh using PyVista's marching cubes algorithm.
+
+    :param array_stack: A 3D numpy array stack.
+    :param threshold: The threshold level to apply the marching cubes algorithm.
+    :param filename: The filename to save the mesh.
+    :param file_format: Format to save the mesh in (e.g., "stl", "ply", "obj", "vtk").
+    """
+    # Create a PyVista grid from the NumPy array stack
+    grid = pv.UniformGrid()
+    grid.dimensions = np.array(array_stack.shape)
+    # For a UniformGrid, the "spacing" attribute defines the distance between adjacent points on the grid
+    # If your data is isotropic (equal spacing in all directions), it can be left as the default (1.0, 1.0, 1.0)
+    # If you have different spacing, you would set it here
+    grid.spacing = grid_spacing  # (optional) Adjust this if your data has non-uniform spacing
+    
+    # Flatten the array_stack and assign it to the grid
+    grid.point_data["values"] = array_stack.flatten(order="F")  # Use Fortran order to match PyVista's indexing
+    
+    # Run the marching cubes algorithm
+    contours = grid.contour([threshold])
+
+    # Save the mesh to a file
+
+    # meshio is used for VRML as PyVista does not support VRML natively
+    cells = [("triangle", contours.faces.reshape(-1, 4)[:, 1:])]
+    meshio.write_points_cells(
+        filename,
+        contours.points,
+        cells,
+        file_format=file_format
+    )
+
 
 def main(array_stack, filename, file_format="obj"):
     points = arrays_to_point_cloud(array_stack)
@@ -106,21 +142,11 @@ def test_tif_images_to_numpy_array_stack():
     array_stack = tif_images_to_numpy_array_stack(directory, filename_pattern, image_count)
 
 
-def main(array_stack, filename, file_format="obj"):
-    #array_stack = tif_images_to_numpy_array_stack(directory, filename_pattern, image_count)
-    points = arrays_to_point_cloud(array_stack)
-    surface = point_cloud_to_mesh(points)   
-    save_mesh(surface, filename, file_format)
-
-# write main execution with argparse
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Convert a stack of 2D binary numpy arrays to a 3D mesh.')
-    parser.add_argument('array_stack', type=str, help='The path to the input stack of 2D binary numpy arrays.')
-    parser.add_argument('filename', type=str, help='The name of the output mesh file.')
-    parser.add_argument('--file_format', type=str, default='obj', help='The file format of the output mesh file.')
-    args = parser.parse_args()
-    main(args.array_stack, args.filename, args.file_format)
+def main(directory, filename_pattern, filename_out, file_format="obj", grid_spacing = (1, 1, 1)):
+    array_stack = tif_images_to_numpy_array_stack(directory, filename_pattern)
+    #points = arrays_to_point_cloud(array_stack)
+    #surface = point_cloud_to_mesh(points)   
+    #save_mesh(surface, filename, file_format)
+    numpy_stack_to_mesh(array_stack, threshold = 0.9, filename_out, file_format=file_format, grid_spacing = (grid_spacing))
 
 
-#directory = 'data'
-#filename_pattern = '{}.tif'
